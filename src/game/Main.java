@@ -127,7 +127,7 @@ public class Main extends JPanel implements KeyListener, ActionListener{
         {
             this.player.change_x = 2;
         }
-        if(c == KeyEvent.VK_RIGHT)
+        if(c == KeyEvent.VK_LEFT)
         {
             this.player.change_x = -2;
         }

@@ -120,6 +120,7 @@ public class Main extends JPanel implements KeyListener, ActionListener{
             this.enemy_y = -enemy_h - 10;
             this.bullet_w = 10;
             this.bullet_h = 10;
+            this.bullets.add(new ArrayList<>(Arrays.asList(this.enemy_x + this.enemy_w / 2 - this.bullet_w / 2, this.enemy_y + this.enemy_w - this.bullet_w)));
         }
 
         public void drawEnemy(Graphics g)
@@ -151,6 +152,9 @@ public class Main extends JPanel implements KeyListener, ActionListener{
 
         // This function will load new bullet in plane to fire
         public void addNewBullets() {
+            if(this.bullets.size() == 0)
+                this.bullets.add(new ArrayList<>(Arrays.asList(this.enemy_x + this.enemy_w / 2 - this.bullet_w / 2, this.enemy_y + this.enemy_w - this.bullet_w)));
+
             ArrayList<Integer> number = this.bullets.get(this.bullets.size() - 1);
             if(number.get(1) - this.enemy_y > ThreadLocalRandom.current().nextInt(220, 250))
             {
@@ -168,8 +172,10 @@ public class Main extends JPanel implements KeyListener, ActionListener{
     private final Player player = new Player();
     // this is the Enemy plane object
     private final ArrayList<Enemy> enemy = new ArrayList<>();
+    private Integer score;
 
     public Main() {
+        this.score = 0;
         Timer t = new Timer(5, this);
         t.start();
     }
@@ -205,9 +211,39 @@ public class Main extends JPanel implements KeyListener, ActionListener{
             this.enemy.add(new Enemy());
     }
 
+    public void planeDamage(Enemy e)
+    {
+        for(ArrayList<Integer> number : e.bullets)
+        {
+            if((this.player.player_x < number.get(0) && number.get(0) < this.player.player_x + this.player.player_w) && (this.player.player_y < number.get(1) + e.bullet_w && number.get(1) < this.player.player_y + this.player.player_h)) {
+                this.player.life -= 1;
+                number.set(0, screen_height + 20);
+            }
+
+            if((this.player.player_x < e.enemy_x + e.enemy_w && e.enemy_x < this.player.player_x + this.player.player_w) && (this.player.player_y < e.enemy_y + e.enemy_h && e.enemy_y < this.player.player_y + this.player.player_h))
+            {
+                this.player.life -= 1;
+                e.enemy_y = screen_height + 20;
+            }
+        }
+    }
+
+    public boolean enemyDamage(Enemy e)
+    {
+        for(ArrayList<Integer> number : this.player.bullets)
+        {
+            if((e.enemy_x < number.get(0) + this.player.bullet_w && number.get(0) < e.enemy_x + e.enemy_w) && (e.enemy_y < number.get(1) + this.player.bullet_h && number.get(1) < e.enemy_y + e.enemy_h))
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+
     @Override
     public void paint(Graphics g) {
         super.paint(g);
+
         this.player.drawPlayer(g);
         this.player.drawBullets(g);
         this.player.drawHealthBar(g);
@@ -216,6 +252,7 @@ public class Main extends JPanel implements KeyListener, ActionListener{
         this.player.deleteExtraBullets();
 
         this.atLeastOneEnemy();
+        this.addNewEnemy();
 
         for(Enemy e : enemy)
         {
@@ -225,8 +262,15 @@ public class Main extends JPanel implements KeyListener, ActionListener{
             e.moveEnemy();
             e.addNewBullets();
             e.deleteExtraBullets();
+            this.planeDamage(e);
+
+            if(this.enemyDamage(e)) {
+                e.enemy_y = screen_height + 20;
+                this.score += 1;
+            }
         }
-        this.addNewEnemy();
+        System.out.println(score);
+
     }
 
     @Override
